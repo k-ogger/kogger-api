@@ -1,0 +1,6 @@
+builds:
+- id: kogger-api
+  dir: ./
+  # outputImage: nexuszolara.me/kogger/kogger-api
+  ldflags:
+  - -s -w
