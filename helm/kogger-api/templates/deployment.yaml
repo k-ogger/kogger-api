@@ -16,7 +16,6 @@ spec:
       annotations:
         kubectl.kubernetes.io/default-logs-container: {{ include "kogger-api.name" . }}
     spec:
-      serviceAccountName: "{{ include "kogger-api.name" . }}-sa"
       {{- with .Values.podSecurityContext }}
       podSecurityContext:
         {{- toYaml . | nindent 8 }}
