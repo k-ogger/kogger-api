@@ -78,4 +78,12 @@ var routes = Routes{
 		GetLogs,
 		[]string{  },
 	},
+
+	Route{
+		"GetNamespaces",
+		strings.ToUpper("Get"),
+		"/api/namespaces",
+		GetNamespaces,
+		[]string{  },
+	},
 }

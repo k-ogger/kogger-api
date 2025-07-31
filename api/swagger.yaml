@@ -8,6 +8,26 @@ tags:
 - name: "Logs"
   description: "Endpoints for logs"
 paths:
+  /namespaces:
+    get:
+      tags:
+      - "Logs"
+      summary: "Get all namespaces"
+      operationId: "getNamespaces"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        "200":
+          description: "All namespaces retrieved successfully"
+          schema:
+            $ref: "#/definitions/NamespaceResponse"
+        "401":
+          description: "Unauthorized"
+        "403":
+          description: "Forbidden"
+        "404":
+          description: "Not Found"
   /logs:
     get:
       tags:
@@ -29,6 +49,36 @@ paths:
         "404":
           description: "Not Found"
 definitions:
+  NamespaceResponse:
+    type: "object"
+    required:
+    - "Namespaces"
+    properties:
+      Namespaces:
+        type: "array"
+        items:
+          $ref: "#/definitions/NamespaceInList"
+    example:
+      Namespaces:
+      - path: "path"
+        name: "name"
+      - path: "path"
+        name: "name"
+  NamespaceInList:
+    type: "object"
+    required:
+    - "name"
+    - "path"
+    properties:
+      name:
+        type: "string"
+        description: "Name of the namespace"
+      path:
+        type: "string"
+        description: "Api path to get logs for the namespace"
+    example:
+      path: "path"
+      name: "name"
   LogResponse:
     type: "object"
     properties:

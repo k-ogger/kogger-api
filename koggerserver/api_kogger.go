@@ -23,6 +23,43 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+func GetNamespaces(w http.ResponseWriter, r *http.Request) {
+	ctx, grpcToken := createContextFromHeader(r)
+
+	conn, err := grpc.Dial(fmt.Sprintf("%v:%v", KoggerServiceHost, KoggerServicePort), grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		logger.Err(grpcToken, "GetNamespaces could not establish gRPC connection: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetNamespaces could not establish gRPC connection: %v", err))
+		return
+	}
+	defer conn.Close()
+	client := koggerservicerpc.NewKoggerServiceClient(conn)
+
+	res, err := client.GetNamespaces(ctx, &koggerservicerpc.Void{})
+	if err != nil {
+		logger.Err(grpcToken, "GetNamespaces failed: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetNamespaces failed: %s", err))
+		return
+	}
+
+	responseObj := []models.NamespaceInList{}
+
+	for _, namespace := range res.Namespaces {
+		responseObj = append(responseObj, models.NamespaceInList{
+			Name: namespace.Name,
+			Path: namespace.Path,
+		})
+	}
+
+	response, _ := json.Marshal(responseObj)
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
+}
+
 func GetLogs(w http.ResponseWriter, r *http.Request) {
 	ctx, grpcToken := createContextFromHeader(r)
 
@@ -36,7 +73,7 @@ func GetLogs(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close()
 	client := koggerservicerpc.NewKoggerServiceClient(conn)
 
-	res, err := client.GetLogs(ctx, &koggerservicerpc.Void{})
+	res, err := client.GetLogs(ctx, &koggerservicerpc.LogsRequest{})
 	if err != nil {
 		logger.Err(grpcToken, "GetLogs failed: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
