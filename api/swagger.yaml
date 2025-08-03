@@ -43,6 +43,13 @@ paths:
         required: true
         type: "string"
         x-exportParamName: "Namespace"
+      - name: "resourceType"
+        in: "query"
+        description: "Type of the resource"
+        required: false
+        type: "string"
+        x-exportParamName: "ResourceType"
+        x-optionalDataType: "String"
       responses:
         "200":
           description: "All resources in the namespace retrieved successfully"
@@ -56,7 +63,7 @@ paths:
           description: "Forbidden"
         "404":
           description: "Not Found"
-  /resources/{namespace}:
+  /resource:
     get:
       tags:
       - "Logs"
@@ -66,7 +73,7 @@ paths:
       - "application/json"
       parameters:
       - name: "namespace"
-        in: "path"
+        in: "query"
         description: "Name of the namespace"
         required: true
         type: "string"
@@ -85,11 +92,11 @@ paths:
         x-exportParamName: "Name"
       responses:
         "200":
-          description: "All resources in the namespace retrieved successfully"
+          description: "Resource information retrieved successfully"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/ResourcesList"
+              $ref: "#/definitions/ResourceInfo"
         "401":
           description: "Unauthorized"
         "403":
@@ -117,6 +124,36 @@ paths:
         "404":
           description: "Not Found"
 definitions:
+  ResourceInfo:
+    type: "object"
+    required:
+    - "name"
+    - "namespace"
+    - "resourceType"
+    - "status"
+    properties:
+      namespace:
+        type: "string"
+        description: "Namespace of the resource"
+      resourceType:
+        type: "string"
+        description: "Type of the resource"
+      name:
+        type: "string"
+        description: "Name of the resource"
+      status:
+        type: "string"
+        description: "Status of the resource"
+      information:
+        type: "object"
+        description: "Additional information about the resource"
+        properties: {}
+    example:
+      namespace: "namespace"
+      name: "name"
+      information: "{}"
+      resourceType: "resourceType"
+      status: "status"
   NamespaceResponse:
     type: "object"
     required:
@@ -149,12 +186,16 @@ definitions:
       namespace: "namespace"
       resources:
       - resources:
-        - name: "name"
-        - name: "name"
+        - informationPath: "informationPath"
+          name: "name"
+        - informationPath: "informationPath"
+          name: "name"
         resourceType: "pod"
       - resources:
-        - name: "name"
-        - name: "name"
+        - informationPath: "informationPath"
+          name: "name"
+        - informationPath: "informationPath"
+          name: "name"
         resourceType: "pod"
   ResourcesByType:
     type: "object"
@@ -172,18 +213,25 @@ definitions:
           $ref: "#/definitions/ResourcesInList"
     example:
       resources:
-      - name: "name"
-      - name: "name"
+      - informationPath: "informationPath"
+        name: "name"
+      - informationPath: "informationPath"
+        name: "name"
       resourceType: "pod"
   ResourcesInList:
     type: "object"
     required:
+    - "informationPath"
     - "name"
     properties:
       name:
         type: "string"
         description: "Name of the resource"
+      informationPath:
+        type: "string"
+        description: "Api path to get information for the resource"
     example:
+      informationPath: "informationPath"
       name: "name"
   NamespaceInList:
     type: "object"

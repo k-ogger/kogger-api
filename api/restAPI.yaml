@@ -42,6 +42,11 @@ paths:
           required: true
           type: "string"
           description: "Name of the namespace"
+        - name: "resourceType"
+          in: "query"
+          required: false
+          type: "string"
+          description: "Type of the resource"
       responses:
         200:
           description: "All resources in the namespace retrieved successfully"
@@ -56,7 +61,35 @@ paths:
         404:
           description: "Not Found"
 
-  /resources/{namespace}:
+  # /resources/{namespace}:
+  #   get:
+  #     tags:
+  #       - "Logs"
+  #     summary: "Get all resources in a namespace"
+  #     operationId: "getResources"
+  #     produces:
+  #       - "application/json"
+  #     parameters:
+  #       - name: "namespace"
+  #         in: "path"
+  #         required: true
+  #         type: "string"
+  #         description: "Name of the namespace"
+  #     responses:
+  #       200:
+  #         description: "All resources in the namespace retrieved successfully"
+  #         schema:
+  #           type: "array"
+  #           items:
+  #             $ref: "#/definitions/ResourcesList"
+  #       401:
+  #         description: "Unauthorized"
+  #       403:
+  #         description: "Forbidden"
+  #       404:
+  #         description: "Not Found"
+
+  /resource:
     get:
       tags:
         - "Logs"
@@ -66,7 +99,7 @@ paths:
         - "application/json"
       parameters:
         - name: "namespace"
-          in: "path"
+          in: "query"
           required: true
           type: "string"
           description: "Name of the namespace"
@@ -82,11 +115,11 @@ paths:
           description: "Name of the resource"
       responses:
         200:
-          description: "All resources in the namespace retrieved successfully"
+          description: "Resource information retrieved successfully"
           schema:
             type: "array"
             items:
-              $ref: "#/definitions/ResourcesList"
+              $ref: "#/definitions/ResourceInfo"
         401:
           description: "Unauthorized"
         403:
@@ -115,6 +148,31 @@ paths:
           description: "Not Found"
 
 definitions:
+  ResourceInfo:
+    type: "object"
+    properties:
+      namespace:
+        type: "string"
+        description: "Namespace of the resource"
+      resourceType:
+        type: "string"
+        description: "Type of the resource"
+      name:
+        type: "string"
+        description: "Name of the resource"
+      status:
+        type: "string"
+        description: "Status of the resource"
+      information:
+        type: "object"
+        additionalProperties: true
+        description: "Additional information about the resource"
+    required:
+      - namespace
+      - resourceType
+      - name
+      - status
+
   NamespaceResponse:
     type: "object"
     properties:
@@ -160,8 +218,12 @@ definitions:
       name:
         type: "string"
         description: "Name of the resource"
+      informationPath:
+        type: "string"
+        description: "Api path to get information for the resource"
     required:
       - name
+      - informationPath
 
   NamespaceInList:
     type: "object"

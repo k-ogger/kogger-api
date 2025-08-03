@@ -90,7 +90,7 @@ var routes = Routes{
 	Route{
 		"GetResource",
 		strings.ToUpper("Get"),
-		"/api/resources/{namespace}",
+		"/api/resource",
 		GetResource,
 		[]string{  },
 	},

@@ -13,4 +13,7 @@ type ResourcesInList struct {
 
 	// Name of the resource
 	Name string `json:"name"`
+
+	// Api path to get information for the resource
+	InformationPath string `json:"informationPath"`
 }
