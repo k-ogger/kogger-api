@@ -9,11 +9,10 @@
 
 package models
 
-type NamespaceInList struct {
+type ResourcesList struct {
 
-	// Name of the namespace
-	Name string `json:"name"`
+	// Namespace of the resource
+	Namespace string `json:"namespace"`
 
-	// Api path to get resources for the namespace
-	ResourcesPath string `json:"resourcesPath"`
+	Resources []ResourcesByType `json:"resources"`
 }

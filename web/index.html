@@ -214,7 +214,6 @@
         </div>
 
         <div id="logs-container" class="logs-grid">
-            <!-- Logs will be displayed here -->
         </div>
     </div>
 
@@ -323,13 +322,11 @@
             `;
         }
 
-        // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('Ready to load logs', 'success');
             fetchLogs();
         });
 
-        // Auto-refresh every 30 seconds
         setInterval(() => {
             if (!isLoading) {
                 fetchLogs();

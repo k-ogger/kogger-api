@@ -19,8 +19,14 @@ import (
 	"github.com/ZolaraProject/library/logger"
 	"github.com/k-ogger/kogger-api/models"
 	"github.com/k-ogger/kogger-service/koggerservicerpc"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+)
+
+const (
+	NamespaceResourcesPathInject = "/api/resources?namespace=%s"
 )
 
 func GetNamespaces(w http.ResponseWriter, r *http.Request) {
@@ -48,8 +54,8 @@ func GetNamespaces(w http.ResponseWriter, r *http.Request) {
 
 	for _, namespace := range res.Namespaces {
 		responseObj = append(responseObj, models.NamespaceInList{
-			Name: namespace.Name,
-			Path: namespace.Path,
+			Name:          namespace.Name,
+			ResourcesPath: fmt.Sprintf(NamespaceResourcesPathInject, namespace.Name),
 		})
 	}
 
@@ -60,50 +66,108 @@ func GetNamespaces(w http.ResponseWriter, r *http.Request) {
 	w.Write(response)
 }
 
-func GetLogs(w http.ResponseWriter, r *http.Request) {
+func ListResources(w http.ResponseWriter, r *http.Request) {
 	ctx, grpcToken := createContextFromHeader(r)
+
+	namespace := r.URL.Query().Get("namespace")
+	if len(namespace) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		writeStandardResponse(r, w, grpcToken, "Namespace is required")
+		return
+	}
 
 	conn, err := grpc.Dial(fmt.Sprintf("%v:%v", KoggerServiceHost, KoggerServicePort), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		logger.Err(grpcToken, "LogIn could not establish gRPC connection: %v", err)
+		logger.Err(grpcToken, "GetResources could not establish gRPC connection: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("LogIn could not establish gRPC connection: %v", err))
+		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetResources could not establish gRPC connection: %v", err))
 		return
 	}
 	defer conn.Close()
 	client := koggerservicerpc.NewKoggerServiceClient(conn)
 
-	res, err := client.GetLogs(ctx, &koggerservicerpc.LogsRequest{})
+	res, err := client.ListResources(ctx, &koggerservicerpc.ResourcesRequest{
+		Namespace: namespace,
+	})
 	if err != nil {
-		logger.Err(grpcToken, "GetLogs failed: %v", err)
+		logger.Err(grpcToken, "GetResources failed: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetLogs failed: %s", err))
+		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetResources failed: %s", err))
 		return
 	}
 
-	responseObj := make([]models.Logs, len(res.Pods))
-	for i, pod := range res.Pods {
-		logResponse := models.Logs{
-			Pod:       pod.Name,
-			Namespace: pod.Namespace,
-			Status:    pod.Status,
-			Node:      pod.NodeName,
-			Logs:      pod.Logs,
+	resourcesByType := []models.ResourcesByType{}
+	for _, resource := range res.GetResourcesList() {
+		resourcesInList := []models.ResourcesInList{}
+		for _, item := range resource.GetResources() {
+			logger.Debug(grpcToken, "Namespace: %s, Type: %s, Name: %s", namespace, resource.GetResourceType(), item.GetName())
+			resourcesInList = append(resourcesInList, models.ResourcesInList{
+				Name: item.GetName(),
+			})
 		}
 
-		responseObj[i] = logResponse
+		resourcesByType = append(resourcesByType, models.ResourcesByType{
+			ResourceType: cases.Title(language.Und).String(resource.GetResourceType()),
+			Resources:    resourcesInList,
+		})
 	}
 
-	logResponse := models.LogResponse{
-		Logs: responseObj,
+	responseObj := models.ResourcesList{
+		Namespace: namespace,
+		Resources: resourcesByType,
 	}
 
-	response, _ := json.Marshal(logResponse)
+	response, _ := json.Marshal(responseObj)
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write(response)
 }
+
+// func GetLogs(w http.ResponseWriter, r *http.Request) {
+// 	ctx, grpcToken := createContextFromHeader(r)
+
+// 	conn, err := grpc.Dial(fmt.Sprintf("%v:%v", KoggerServiceHost, KoggerServicePort), grpc.WithInsecure(), grpc.WithBlock())
+// 	if err != nil {
+// 		logger.Err(grpcToken, "LogIn could not establish gRPC connection: %v", err)
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("LogIn could not establish gRPC connection: %v", err))
+// 		return
+// 	}
+// 	defer conn.Close()
+// 	client := koggerservicerpc.NewKoggerServiceClient(conn)
+
+// 	res, err := client.GetLogs(ctx, &koggerservicerpc.LogsRequest{})
+// 	if err != nil {
+// 		logger.Err(grpcToken, "GetLogs failed: %v", err)
+// 		w.WriteHeader(http.StatusInternalServerError)
+// 		writeStandardResponse(r, w, grpcToken, fmt.Sprintf("GetLogs failed: %s", err))
+// 		return
+// 	}
+
+// 	responseObj := make([]models.Logs, len(res.Pods))
+// 	for i, pod := range res.Pods {
+// 		logResponse := models.Logs{
+// 			Pod:       pod.Name,
+// 			Namespace: pod.Namespace,
+// 			Status:    pod.Status,
+// 			Node:      pod.NodeName,
+// 			Logs:      pod.Logs,
+// 		}
+
+// 		responseObj[i] = logResponse
+// 	}
+
+// 	logResponse := models.LogResponse{
+// 		Logs: responseObj,
+// 	}
+
+// 	response, _ := json.Marshal(logResponse)
+
+// 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write(response)
+// }
 
 var (
 	grpcTokenAlphabet = []byte("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ23456789")

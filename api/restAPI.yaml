@@ -28,7 +28,73 @@ paths:
         404:
           description: "Not Found"
 
-  /logs:
+  /resources:
+    get:
+      tags:
+        - "Logs"
+      summary: "Get all resources in a namespace"
+      operationId: "listResources"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "namespace"
+          in: "query"
+          required: true
+          type: "string"
+          description: "Name of the namespace"
+      responses:
+        200:
+          description: "All resources in the namespace retrieved successfully"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ResourcesList"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+
+  /resources/{namespace}:
+    get:
+      tags:
+        - "Logs"
+      summary: "Get all resources in a namespace"
+      operationId: "getResource"
+      produces:
+        - "application/json"
+      parameters:
+        - name: "namespace"
+          in: "path"
+          required: true
+          type: "string"
+          description: "Name of the namespace"
+        - name: "resourceType"
+          in: "query"
+          required: true
+          type: "string"
+          description: "Type of the resource"
+        - name: "name"
+          in: "query"
+          required: true
+          type: "string"
+          description: "Name of the resource"
+      responses:
+        200:
+          description: "All resources in the namespace retrieved successfully"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/ResourcesList"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden"
+        404:
+          description: "Not Found"
+
+  /logs/{namespace}:
     get:
       tags:
         - "Logs"
@@ -52,12 +118,50 @@ definitions:
   NamespaceResponse:
     type: "object"
     properties:
-      Namespaces:
+      namespaces:
         type: "array"
         items:
           $ref: "#/definitions/NamespaceInList"
     required:
-      - Namespaces
+      - namespaces
+
+  ResourcesList:
+    type: "object"
+    properties:
+      namespace:
+        type: "string"
+        description: "Namespace of the resource"
+      resources:
+        type: "array"
+        items:
+          $ref: "#/definitions/ResourcesByType"
+    required:
+      - namespace
+      - resources
+
+  ResourcesByType:
+    type: "object"
+    properties:
+      resourceType:
+        type: "string"
+        description: "Type of the resource"
+        example: "pod"
+      resources:
+        type: "array"
+        items:
+          $ref: "#/definitions/ResourcesInList"
+    required:
+      - resourceType
+      - resources
+
+  ResourcesInList:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "Name of the resource"
+    required:
+      - name
 
   NamespaceInList:
     type: "object"
@@ -65,12 +169,12 @@ definitions:
       name:
         type: "string"
         description: "Name of the namespace"
-      path:
+      resourcesPath:
         type: "string"
-        description: "Api path to get logs for the namespace"
+        description: "Api path to get resources for the namespace"
     required:
       - name
-      - path
+      - resourcesPath
 
   LogResponse:
     type: "object"

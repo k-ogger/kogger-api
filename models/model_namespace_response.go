@@ -11,5 +11,5 @@ package models
 
 type NamespaceResponse struct {
 
-	Namespaces []NamespaceInList `json:"Namespaces"`
+	Namespaces []NamespaceInList `json:"namespaces"`
 }

@@ -74,7 +74,7 @@ var routes = Routes{
 	Route{
 		"GetLogs",
 		strings.ToUpper("Get"),
-		"/api/logs",
+		"/api/logs/{namespace}",
 		GetLogs,
 		[]string{  },
 	},
@@ -84,6 +84,22 @@ var routes = Routes{
 		strings.ToUpper("Get"),
 		"/api/namespaces",
 		GetNamespaces,
+		[]string{  },
+	},
+
+	Route{
+		"GetResource",
+		strings.ToUpper("Get"),
+		"/api/resources/{namespace}",
+		GetResource,
+		[]string{  },
+	},
+
+	Route{
+		"ListResources",
+		strings.ToUpper("Get"),
+		"/api/resources",
+		ListResources,
 		[]string{  },
 	},
 }
